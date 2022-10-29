@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>File Access with Drag and Drop</title>
+    <link rel="stylesheet" href="css/layout.css" />
+
+
+    <link rel="stylesheet" href="https://js.arcgis.com/3.41/esri/css/esri.css">
+    <script src="https://js.arcgis.com/3.41/"></script> 
+    
+    <script src="kriging.js" type="text/javascript"></script>
+    <script>
+        require(["esri/geometry/webMercatorUtils"],
+                function(webMercatorUtils) {
+        var x = document.cookie;
+        x = x.split(',');
+        dataCSV = [];
+        window.alert(x);
+        for(var i=0; i< x.length; i++)
+        {
+            x[i] = parseFloat(x[i]);
+            dataCSV[dataCSV.length] = x[i]
+        }
+        window.alert(dataCSV.length);
+        pm = dataCSV.slice(0,dataCSV.length/3)
+        window.alert(pm.length);
+        csvX = dataCSV.slice(dataCSV.length/3, dataCSV.length/3*2);
+        csvY = dataCSV.slice(dataCSV.length/3, dataCSV.length/3*2);
+        window.alert(csvY.length);
+
+        var t = pm;
+        var x = csvX;
+        var y = csvY;
+
+        console.log(t);
+        console.log(x);
+        console.log(y);
+        var model = "exponential";
+        var sigma2 = 0, alpha = 100;
+        var variogram = kriging.train(t, x, y, model, sigma2, alpha);
+        //window.alert(variogram);
+
+        var xnew, ynew /* Pair of new coordinates to predict */;
+        var tpredicted = kriging.predict(12957999, 4859405, variogram);
+        //createPolygon();
+        window.alert(tpredicted);
+        });
+
+
+
+
+
+    </script>
+    <title></title>
+</head>
+<body>
+
+</body>
+</html>

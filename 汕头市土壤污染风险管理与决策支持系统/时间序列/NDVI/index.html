@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series NDVI</title>
+    <link rel="stylesheet" href="../../resource/ol/ol.css" type="text/css">
+    <script src="../../resource/ol/ol.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/ol-layerswitcher@3.8.3/dist/ol-layerswitcher.css" />
+    <script src="https://unpkg.com/ol-layerswitcher@3.8.3"></script>
+    <link rel="stylesheet" href="style.css" type="text/css">
+
+</head>
+<body>
+    <div id="map" style="width:90%; float: left;"></div>
+    <div style="width:5%; margin: 30px; float: right;"><span style="font-size:20px ;">图例</span><img id="legend" /></div>
+
+    <div class="slidecontainer">
+        <input type="range" min="0" max="21" value="0" class="slider" id="myRange">
+<br>
+<br>
+    <button type="button" id="play">播放</button>
+    <button type="button" id="pause">停止</button>
+    <button type="button" id="reset">重置</button>
+    <p>日期: <span id="date_value"></span></p>
+    </div>
+    
+    <script src="map.js"></script>
+</body>
+</html>

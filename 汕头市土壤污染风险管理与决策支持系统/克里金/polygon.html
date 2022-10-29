@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title></title>
+    <style>
+        html, body, #map {
+            height: 100%; width: 100%; margin: 0; padding: 0;
+        }
+        #loading {
+            width: 100%;
+            height: 100%;
+            top: 0px;
+            left: 0px;
+            position: fixed;
+            display: block;
+            opacity: 0.7;
+            background-color: #fff;
+            z-index: 99;
+            text-align: center;
+        }
+
+        #loading-image {
+            position: absolute;
+            top: 100px;
+            left: 240px;
+            z-index: 100;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/3.41/esri/css/esri.css">
+    <script src="https://js.arcgis.com/3.41/"></script> 
+    <script src="kriging.js" type="text/javascript"></script>
+    <script>
+        require([
+            "esri/map", "esri/geometry/Point", "esri/SpatialReference",
+            "esri/symbols/SimpleMarkerSymbol", "esri/graphic", "esri/geometry/Polygon", "esri/symbols/SimpleFillSymbol"
+        ], function(Map, Point, SpatialReference, SimpleMarkerSymbol, Graphic, Polygon, SimpleFillSymbol ) {
+            var map = new Map("map", {
+                        basemap: "osm",
+                        center: [116.4972300,23.4375000],
+                        slider: false,
+                        zoom: 12
+                    }
+            );
+            // Get cookie data from index.html
+
+
+            var x = document.cookie;
+            //alert(typeof(x));
+            if(x === ''){
+                alert("You have not drag your csv file to last page. Return to last page");
+                window.setTimeout("window.location = 'index.html'", 2000);
+            }
+            x = x.split(',');
+            var dataCSV = [];
+            var krigingValue = [];
+            //window.alert(x);
+            for(var i=0; i< x.length; i++)
+            {
+                x[i] = parseFloat(x[i]);
+                dataCSV[dataCSV.length] = x[i]
+            }
+
+            //make that array into three parts.
+            var pm = dataCSV.slice(0,dataCSV.length/3)
+            var csvX = dataCSV.slice(dataCSV.length/3, dataCSV.length/3*2);
+            var csvY = dataCSV.slice(dataCSV.length/3*2, dataCSV.length);
+
+
+            //set max, min functions for Array
+            Array.prototype.max = function() {
+                return Math.max.apply(null, this);
+            };
+
+            Array.prototype.min = function() {
+                return Math.min.apply(null, this);
+            };
+
+            //get max and min data for these three arraies
+            var rangemaxX = csvX.max();
+            var rangeminX = csvX.min();
+            var rangemaxY = csvY.max();
+            var rangeminY = csvY.min();
+            var rangemaxPM = pm.max();
+            var rangeminPM = pm.min();
+            var colorperiod = (rangemaxPM-rangeminPM)/5
+
+            // get the range values
+            var xl = rangemaxX - rangeminX;
+            var yl = rangemaxY - rangeminY;
+            var gridX = xl/100
+            var gridY = yl/100
+            var gridPoint = [];
+            var llmin = esri.geometry.xyToLngLat(rangeminX, rangeminY);
+            var llmax = esri.geometry.xyToLngLat(rangemaxX, rangemaxY);
+            var lggridx = (llmax[0]- llmin[0])/100
+            var lggridy = (llmax[1]- llmin[1])/100
+
+            grid();
+
+            //Based on the position of polygon, get the kriging value.
+            function getKring(xk,yk){
+            var t = pm;
+            var x = csvX;
+            var y = csvY;
+            var model = "exponential";
+            var sigma2 = 0, alpha = 100;
+            var variogram = kriging.train(t, x, y, model, sigma2, alpha);
+            //window.alert(variogram);
+
+            var xnew, ynew /* Pair of new coordinates to predict */;
+            var tpredicted = kriging.predict(xk, yk, variogram);
+            return tpredicted;
+            }
+
+            // create grids and set kriging values for them.
+            function grid(){
+                //create the range of Kriging based on given points
+                var gX = rangeminX;
+
+                for(var i = 0; i<100; i++)
+                {
+                    gX = gX + gridX;
+                    var gY = rangeminY
+                    for(var j =0; j<100; j++)
+                    {
+                     gY = gY + gridY;
+
+                     var pp = esri.geometry.xyToLngLat(gX, gY);
+                     krigingValue[krigingValue.length] = getKring(gX,gY)
+                     gridPoint[gridPoint.length] = esri.geometry.xyToLngLat(gX, gY);
+                    }
+                }
+
+            }
+
+            //load map
+            map.on("load", function () {
+                for(var i=0; i<10000; i++)
+                {
+                zi = krigingValue[i]
+                createPolygon(gridPoint[i][0], gridPoint[i][1], zi);
+                }
+
+            });
+
+            function ShowLocation(x, y) {
+                var point = new Point(x, y, new SpatialReference({wkid: 4326}));
+                var simpleMarkerSymbol = new SimpleMarkerSymbol('blue');
+                var graphic = new Graphic(point, simpleMarkerSymbol);
+                map.graphics.add(graphic);
+
+            };
+
+            function createPolygon(xi,yi,zi)
+            {
+                var polygonJson  = {"rings":[[[xi-lggridx, yi-lggridy],[xi, yi-lggridy],[xi, yi],[xi - lggridx, yi]]],"spatialReference":{"wkid":4326 }};
+                var polygon = new esri.geometry.Polygon(polygonJson);
+                var simpleFillSymbol = new SimpleFillSymbol();
+                if(zi <= rangemaxPM && zi> rangemaxPM - colorperiod ){
+                simpleFillSymbol.setColor(new esri.Color([189,0,36,0.5]));
+                } else if(zi<= rangemaxPM - colorperiod&& zi>rangemaxPM - 2*colorperiod){
+                    simpleFillSymbol.setColor(new esri.Color([240,59,32,0.5]));
+                }else if(zi<= rangemaxPM - 2*colorperiod&& zi>rangemaxPM - 3*colorperiod){
+                    simpleFillSymbol.setColor(new esri.Color([253,141,60,0.5]));
+                }else if(zi<= rangemaxPM - 3*colorperiod&& zi>rangemaxPM - 4*colorperiod){
+                    simpleFillSymbol.setColor(new esri.Color([254,204,92,0.5]));
+                }else {
+                    simpleFillSymbol.setColor(new esri.Color([255,255,78,0.5]));
+                }
+                var graphic = new Graphic(polygon, simpleFillSymbol);
+                map.graphics.add(graphic);
+
+            }
+        });
+
+
+    </script>
+</head>
+<body>
+<div id="map"></div>
+<div id="lo">
+<div id = "loading">
+    <img id="loading-img" src="img/loading_spinner.gif" alt="Loading...">
+</div>
+
+<script language="javascript" type="text/javascript">
+    window.onload = function(){
+        document.getElementById("loading").style.visibility = "hidden";
+    }
+</script>
+
+</body>
+</html> 

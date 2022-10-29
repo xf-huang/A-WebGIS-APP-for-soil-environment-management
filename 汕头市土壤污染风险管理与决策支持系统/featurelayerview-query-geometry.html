@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,
+      maximum-scale=1,user-scalable=no"
+    />
+
+    <title>
+      企业POI空间分析
+    </title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.24/esri/themes/light/main.css"
+    />
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      #chartPanel {
+        background: #fff;
+        font: "Avenir Next W00";
+        line-height: 1.5em;
+        overflow: auto;
+        padding: 10px;
+        width: 580px;
+        height: 300px;
+      }
+
+      .chart {
+        height: 280px;
+      }
+    </style>
+    <!-- Load the Chart.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+    <script>
+      require([
+        "esri/config",
+        "esri/widgets/Sketch/SketchViewModel",
+        "esri/geometry/Polyline",
+        "esri/geometry/Point",
+        "esri/Graphic",
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/layers/GraphicsLayer",
+        "esri/geometry/geometryEngine",
+        "esri/widgets/Expand",
+        "esri/widgets/Legend",
+        "esri/widgets/Search",
+        "esri/core/reactiveUtils",
+        "esri/core/promiseUtils",
+        "esri/geometry/SpatialReference",
+        "esri/Basemap"
+      ], function (
+        esriConfig,
+        SketchViewModel,
+        Polyline,
+        Point,
+        Graphic,
+        Map,
+        MapView,
+        FeatureLayer,
+        GraphicsLayer,
+        geometryEngine,
+        Expand,
+        Legend,
+        Search,
+        reactiveUtils,
+        promiseUtils,
+        SpatialReference,
+        Basemap
+      ) {
+        esriConfig.apiKey = "AAPK682b8fc89dd74b928c38dbdd8cecde138DEZDWHWf6YYFTGSXz3TI5i2DqB3TYl0ziVn5v9q0JinvKmZ0ox3ipT3TXuAZsIL";
+        // App 'globals'
+        let sketchViewModel, featureLayerView, chartExpand;
+
+        let count = 0,
+          centerGraphic,
+          edgeGraphic,
+          polylineGraphic,
+          bufferGraphic,
+          centerGeometryAtStart,
+          labelGraphic;
+
+        const unit = "meters";
+
+        // Create layers
+        const graphicsLayer = new GraphicsLayer();
+        const bufferLayer = new GraphicsLayer({
+          blendMode: "color-burn"
+        });
+
+        const featureLayer = new FeatureLayer({
+          portalItem: {
+            id: "5575a39cef634cdb826df971efbaf9d8"
+          },
+          outFields: ["*"]
+        });
+
+        //const OSMBasemap = Basemap.fromId("osm-standard");
+
+        // Create map
+        const map = new Map({
+          basemap: "osm",
+          layers: [featureLayer, bufferLayer, graphicsLayer]
+        });
+
+        // Create view
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          zoom: 10,
+          center: [116.64543,23.30000],
+          //spatialReference: SpatialReference.WGS84
+        });
+
+        // Set up statistics definition for client-side query
+        // Total popultion of age groups by gender in census tracts
+        
+
+        // Update UI
+        setUpAppUI();
+
+        function setUpAppUI() {
+          // When layer is loaded, create a watcher to trigger drawing of the buffer polygon
+          view.whenLayerView(featureLayer).then((layerView) => {
+            featureLayerView = layerView;
+
+            let paused = false;
+            reactiveUtils.when(
+              () => !layerView.updating,
+              async () => {
+                if (!paused) {
+                  await drawBufferPolygon();
+                  // Display a popup with instructions only on initial app load.
+                  if (count == 0) {
+                    view.popup.open({
+                      title: "Center point",
+                      content:
+                        "Drag this point to move the buffer.<br/> " +
+                        "Or drag the <b>Edge</b> point to resize the buffer.",
+                      location: centerGraphic.geometry
+                    });
+                    view.popup.alignment = "top-left";
+                    count = 1;
+                  }
+                }
+              }
+            );
+          });
+
+          view.when(() => {
+            // Display the chart in an Expand widget
+            chartExpand = new Expand({
+              expandIconClass: "esri-icon-chart",
+              expandTooltip: "Population pyramid chart",
+              expanded: false,
+              view: view,
+              content: document.getElementById("chartPanel")
+            });
+
+            const search = new Search({
+              view: view,
+              resultGraphicEnabled: false,
+              popupEnabled: false
+            });
+
+            // Resume drawBufferPolygon() function; user searched for a new location
+            // Must update the buffer polygon and re-run the stats query
+            search.on("search-complete", () => {
+              paused = true;
+            });
+
+            // Legend widget
+            const legend = new Legend({
+              view: view,
+              layerInfos: [
+                {
+                  layer: featureLayer,
+                  title: "2010 Population Density by Census tracts"
+                }
+              ]
+            });
+
+            // Display the Legend in an Expand widget
+            const legendExpand = new Expand({
+              expandTooltip: "Show Legend",
+              expanded: false,
+              view: view,
+              content: legend
+            });
+
+            // Add our components to the UI
+            view.ui.add(chartExpand, "bottom-left");
+            view.ui.add(search, "top-right");
+            view.ui.add(legendExpand, "bottom-right");
+          });
+
+          // Close the 'help' popup when view is focused
+          view.watch("focused", (newValue) => {
+            if (newValue) {
+              view.popup.close();
+            }
+          });
+        }
+
+        /*********************************************************************
+         * Edge or center graphics are being moved. Recalculate the buffer with
+         * updated geometry information and run the query stats again.
+         *********************************************************************/
+        const onMove = promiseUtils.debounce((event) => {
+          // If the edge graphic is moving, keep the center graphic
+          // at its initial location. Only move edge graphic
+          if (
+            event.toolEventInfo &&
+            event.toolEventInfo.mover.attributes.edge
+          ) {
+            const toolType = event.toolEventInfo.type;
+            if (toolType === "move-start") {
+              centerGeometryAtStart = centerGraphic.geometry;
+            }
+            // keep the center graphic at its initial location when edge point is moving
+            else if (toolType === "move" || toolType === "move-stop") {
+              centerGraphic.geometry = centerGeometryAtStart;
+            }
+          }
+
+          // the center or edge graphic is being moved, recalculate the buffer
+          const vertices = [
+            [centerGraphic.geometry.x, centerGraphic.geometry.y],
+            [edgeGraphic.geometry.x, edgeGraphic.geometry.y]
+          ];
+
+          // client-side stats query of features that intersect the buffer
+          calculateBuffer(vertices);
+
+          // user is clicking on the view... call update method with the center and edge graphics
+          if (event.state === "complete") {
+            sketchViewModel.update([edgeGraphic, centerGraphic], {
+              tool: "move"
+            });
+          }
+        });
+
+        /*****************************************************************
+         * Create SketchViewModel and wire up event listeners
+         *****************************************************************/
+        sketchViewModel = new SketchViewModel({
+          view: view,
+          layer: graphicsLayer
+        });
+
+        // Listen to SketchViewModel's update event so that population pyramid chart
+        // is updated as the graphics are updated
+        sketchViewModel.on("update", onMove);
+
+        /*********************************************************************
+         * Edge or center point is being updated. Recalculate the buffer with
+         * updated geometry information.
+         *********************************************************************/
+        function calculateBuffer(vertices) {
+          // Update the geometry of the polyline based on location of edge and center points
+          polylineGraphic.geometry = new Polyline({
+            paths: vertices,
+            spatialReference: view.spatialReference
+          });
+
+          // Recalculate the polyline length and buffer polygon
+          const length = geometryEngine.geodesicLength(
+            polylineGraphic.geometry,
+            unit
+          );
+          const buffer = geometryEngine.geodesicBuffer(
+            centerGraphic.geometry,
+            length,
+            unit
+          );
+
+          // Update the buffer polygon
+          bufferGraphic.geometry = buffer;
+
+          // Query female and male age groups of the census tracts that intersect
+          // the buffer polygon on the client
+          queryLayerViewAgeStats(buffer).then((newData) => {
+            // Create a population pyramid chart from the returned result
+            updateChart(newData);
+          });
+
+          // Update label graphic to show the length of the polyline
+          labelGraphic.geometry = edgeGraphic.geometry;
+          labelGraphic.symbol = {
+            type: "text",
+            color: "#EF34BC",
+            text: length.toFixed(0) + " meters",
+            xoffset: 50,
+            yoffset: 10,
+            font: {
+              // autocast as Font
+              size: 14,
+              family: "sans-serif"
+            }
+          };
+        }
+
+        /*********************************************************************
+         * Spatial query the census tracts feature layer view for statistics
+         * using the updated buffer polygon.
+         *********************************************************************/
+        function queryLayerViewAgeStats(buffer) {
+          // Data storage for the chart
+          let femaleAgeData = [],
+            maleAgeData = [];
+
+          // Client-side spatial query:
+          // Get a sum of age groups for census tracts that intersect the polygon buffer
+          const query = featureLayerView.layer.createQuery();
+          query.outStatistics = [{
+              onStatisticField:
+                "type",
+              outStatisticFieldName: "num",
+              statisticType: "count"
+            }];
+          query.geometry = buffer;
+          //query.where = "type='gongchang'";
+          query.groupByFieldsForStatistics = [ "type" ]
+
+          // Query the features on the client using FeatureLayerView.queryFeatures
+          return featureLayerView
+            .queryFeatures(query)
+            .then((results) => {
+              // Statistics query returns a feature with 'stats' as attributes
+              let results_features = results.features;
+              let feature_counts = [];
+              for (let i = 0; i < results_features.length; i++) {
+                feature_counts.push(results_features[i].attributes.num)
+              }
+              
+
+              
+
+              // Loop through attributes and save the values for use in the population pyramid.
+              console.log(feature_counts);
+              
+              // Return information, seperated by gender
+              return feature_counts;
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        }
+
+        /***************************************************
+         * Draw the buffer polygon when application loads or
+         * when user searches for a new location
+         **************************************************/
+        function drawBufferPolygon() {
+          // When pause() is called on the watch handle, the callback represented by the
+          // watch is no longer invoked, but is still available for later use
+          // this watch handle will be resumed when user searches for a new location
+          // pausableWatchHandle.pause();
+          paused = false;
+
+          // Initial location for the center, edge and polylines on the view
+          const viewCenter = view.center.clone();
+          const centerScreenPoint = view.toScreen(viewCenter);
+          const centerPoint = view.toMap({
+            x: centerScreenPoint.x + 120,
+            y: centerScreenPoint.y - 120
+          });
+          const edgePoint = view.toMap({
+            x: centerScreenPoint.x + 240,
+            y: centerScreenPoint.y - 120
+          });
+
+          // Store updated vertices
+          const vertices = [
+            [centerPoint.x, centerPoint.y],
+            [edgePoint.x, edgePoint.y]
+          ];
+
+          // Create center, edge, polyline and buffer graphics for the first time
+          if (!centerGraphic) {
+            const polyline = new Polyline({
+              paths: vertices,
+              spatialReference: view.spatialReference
+            });
+
+            // get the length of the initial polyline and create buffer
+            const length = geometryEngine.geodesicLength(polyline, unit);
+            const buffer = geometryEngine.geodesicBuffer(
+              centerPoint,
+              length,
+              unit
+            );
+
+            // Create the graphics representing the line and buffer
+            const pointSymbol = {
+              type: "simple-marker",
+              style: "circle",
+              size: 10,
+              color: [0, 255, 255, 0.5]
+            };
+            centerGraphic = new Graphic({
+              geometry: centerPoint,
+              symbol: pointSymbol,
+              attributes: {
+                center: "center"
+              }
+            });
+
+            edgeGraphic = new Graphic({
+              geometry: edgePoint,
+              symbol: pointSymbol,
+              attributes: {
+                edge: "edge"
+              }
+            });
+
+            polylineGraphic = new Graphic({
+              geometry: polyline,
+              symbol: {
+                type: "simple-line",
+                color: [254, 254, 254, 1],
+                width: 2.5
+              }
+            });
+
+            bufferGraphic = new Graphic({
+              geometry: buffer,
+              symbol: {
+                type: "simple-fill",
+                color: [150, 150, 150],
+                outline: {
+                  color: "#FFEB00",
+                  width: 2
+                }
+              }
+            });
+            labelGraphic = labelLength(edgePoint, length);
+
+            // Add graphics to layer used with sketchVM
+            graphicsLayer.addMany([
+              centerGraphic,
+              edgeGraphic,
+              polylineGraphic
+            ]);
+            // Add label to view graphics
+            view.graphics.add(labelGraphic);
+            // once center and edge point graphics are added to the layer,
+            // call sketch's update method pass in the graphics so that users
+            // can just drag these graphics to adjust the buffer
+            sketchViewModel.update([edgeGraphic, centerGraphic], {
+              tool: "move"
+            });
+
+            bufferLayer.addMany([bufferGraphic]);
+          }
+          // Move the center and edge graphics to the new location returned from search
+          else {
+            centerGraphic.geometry = centerPoint;
+            edgeGraphic.geometry = edgePoint;
+          }
+
+          // Query features that intersect the buffer
+          calculateBuffer(vertices);
+        }
+
+        // Create an population pyramid chart for the census tracts that intersect the buffer polygon
+        // Chart is created using the Chart.js library
+        let chart;
+
+        function updateChart(newData) {
+          chartExpand.expanded = true;
+
+          
+
+          if (!chart) {
+            // Get the canvas element and render the chart in it
+            const canvasElement = document.getElementById("chart");
+
+            chart = new Chart(canvasElement.getContext("2d"), {
+              type: "horizontalBar",
+              data: {
+                // age groups
+                labels: [
+                  "工厂",
+                  "农林牧渔",
+                  "冶金化工",
+                  "医药",
+                  "建筑",
+                  "机械电子",
+                 
+                ],
+                datasets: [
+                  {
+                    label: "Count",
+                    backgroundColor: "#B266FF",
+                    borderColor: "#7F00FF",
+                    borderWidth: 0.25,
+                    data: newData
+                  }
+                ]
+              },
+              options: {
+                responsive: false,
+                legend: {
+                  position: "bottom"
+                },
+                title: {
+                  display: true,
+                  text: "数量统计"
+                },
+                scales: {
+                  yAxes: [
+                    {
+                      categorySpacing: 0,
+                      barThickness: 20,
+                      stacked: false,
+                      scaleLabel: {
+                        display: true,
+                        labelString: "企业类型"
+                      }
+                    }
+                  ],
+                  xAxes: [
+                    {
+                      ticks: {
+                        callback: (value) => {
+                          const val = Math.abs(parseInt(value));
+                          return numberWithCommas(val);
+                        }
+                      },
+                      scaleLabel: {
+                        display: true,
+                        labelString: "企业数量"
+                      }
+                    }
+                  ]
+                },
+                tooltips: {
+                  callbacks: {
+                    label: (tooltipItem, data) => {
+                      return (
+                        data.datasets[tooltipItem.datasetIndex].label +
+                        ": " +
+                        numberWithCommas(Math.abs(tooltipItem.xLabel))
+                      );
+                    }
+                  }
+                }
+              }
+            });
+          
+          } else {
+            chart.data.datasets[0].data = newData;
+            chart.update();
+          }
+        }
+
+        // Helper function for formatting number labels with commas
+        function numberWithCommas(value) {
+          value = value || 0;
+          return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Label polyline with its length
+        function labelLength(geom, length) {
+          return new Graphic({
+            geometry: geom,
+            symbol: {
+              type: "text",
+              color: "#FFEB00",
+              text: length.toFixed(2) + " kilometers",
+              xoffset: 50,
+              yoffset: 10,
+              font: {
+                // autocast as Font
+                size: 14,
+                family: "sans-serif"
+              }
+            }
+          });
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="chartPanel"><canvas id="chart" class="chart"></canvas></div>
+  </body>
+</html>

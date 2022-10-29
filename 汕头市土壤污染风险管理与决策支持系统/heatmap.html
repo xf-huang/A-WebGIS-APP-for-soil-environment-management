@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>企业POI核密度</title>
+    <link rel="stylesheet" href="node_modules/ol/ol.css">
+    <style>
+      .map {
+        width: 100%;
+        height: 700px;
+      }
+    </style>
+    <script src="./resource/ol/ol.js"></script>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <form>
+      <label for="radius">半径大小</label>
+      <input id="radius" type="range" min="5" max="15" step="1" value="8"/>
+      <label for="blur">模糊大小</label>
+      <input id="blur" type="range" min="1" max="30" step="1" value="15"/>
+    </form>
+    <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+    <script>
+
+
+
+        const blur = document.getElementById('blur');
+        const radius = document.getElementById('radius');
+
+        const vector = new ol.layer.Heatmap({
+            source: new ol.source.Vector({
+                format: new ol.format.GeoJSON(),
+                url: "https://services8.arcgis.com/PINgMXpNbFV5h7f0/arcgis/rest/services/samplesites/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&f=pgeojson"
+            }),
+            blur: parseInt(blur.value, 10),
+            radius: parseInt(radius.value, 10),
+        
+        });
+
+        const baselayer = new ol.layer.Tile({
+          source: new ol.source.OSM(),
+        });
+
+        const map = new ol.Map({
+        layers: [baselayer, vector],
+        target: 'map',
+        });
+
+        map.setView(new ol.View({
+            center: ol.proj.fromLonLat([116.41, 23.52]),
+            zoom: 10,
+        }))
+
+        blur.addEventListener('input', function () {
+        vector.setBlur(parseInt(blur.value, 10));
+        });
+
+        radius.addEventListener('input', function () {
+        vector.setRadius(parseInt(radius.value, 10));
+        });
+
+    </script>
+    
+  </body>
+</html>

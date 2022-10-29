@@ -1,0 +1,154 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS API for JavaScript Tutorials: Query a feature layer (SQL)</title>
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    };
+    .esri-ui-corner .esri-component.esri-widget--panel {
+    width: 200px !important;
+};
+  </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.24/"></script>
+  <script>
+
+    require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/rest/support/Query",
+      "esri/layers/GraphicsLayer",
+      "esri/widgets/Sketch/SketchViewModel",
+      "esri/core/promiseUtils",
+      "esri/geometry/SpatialReference"
+    ], function(esriConfig,Map, MapView, FeatureLayer, Query, GraphicsLayer, SketchViewModel, promiseUtils, SpatialReference) {
+
+      esriConfig.apiKey = "AAPK682b8fc89dd74b928c38dbdd8cecde138DEZDWHWf6YYFTGSXz3TI5i2DqB3TYl0ziVn5v9q0JinvKmZ0ox3ipT3TXuAZsIL";
+
+      const map = new Map({
+        basemap: "arcgis-imagery" //Basemap layer service
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [116.64543,23.30000], //Longitude, latitude
+        zoom: 11,
+        SpatialReference: SpatialReference.WGS84
+      
+      });
+
+    // Define a pop-up for Trailheads
+    const popupTrailheads = {
+        "title": "企业信息",
+        "content": "<b>名称:</b> {name}<br><b>类型:</b> {type}<br><b>地址:</b> {address}<br>"
+      }
+
+    const factory = new FeatureLayer({
+        portalItem: {
+            id: "a28bf61236a44f758fe533b26b604cc2"
+          },
+          outFields: ["type", "name"],
+          popupTemplate: popupTrailheads
+      });
+
+    map.add(factory);
+
+    const sketchLayer = new GraphicsLayer();
+
+    // use SketchViewModel to draw polygons that are used as a query
+    let sketchGeometry = null;
+        const sketchViewModel = new SketchViewModel({
+          layer: sketchLayer,
+          defaultUpdateOptions: {
+            tool: "reshape",
+            toggleToolOnClick: false
+          },
+          view: view,
+          defaultCreateOptions: { hasZ: false }
+        });
+
+        sketchViewModel.on("create", (event) => {
+          if (event.state === "complete") {
+            sketchGeometry = event.graphic.geometry;
+            sketchGeometry.SpatialReference = view.SpatialReference;
+            console.log(sketchGeometry.SpatialReference)
+            queryStatistics();
+          }
+        });
+
+      const polygonBtn = document.getElementById("polygon-geometry-button");
+    
+      polygonBtn.addEventListener("click", geometryButtonsClickHandler);
+      function geometryButtonsClickHandler() {
+        queryStatistics();
+      }
+
+      // set the geometry query on the visible SceneLayerView
+    
+
+      
+
+        function queryStatistics() {
+          const sumFactory = {
+          onStatisticField: "type",  // service field for 2015 population
+          outStatisticFieldName: "factory_count",
+          statisticType: "sum"
+        }
+          const query = factory.createQuery();
+          query.where = "type = '医药'";
+          query.outStatistics = [ sumFactory ];
+          
+          factory.queryFeatures(query)
+            .then(function(response){
+              let stats = response.features[0].attributes;
+              console.log("output stats:", stats.factory_count);
+            });
+        }
+
+        
+
+    //const query = new Query();
+    //query.where = "type = '工厂'";
+
+    // factory.queryFeatureCount(query).then(function(numResults){
+    //   console.log(numResults);  // prints the number of results satisfying the query
+    // });
+    });
+  </script>
+</head>
+<body>
+  <div id="viewDiv"></div>
+  <div id="queryDiv" class="esri-widget">
+    <b>选择查询区域</b><br />
+    <br />通过几何图形选择:
+    <div class="geometry-options">
+      <button
+        class="esri-widget--button esri-icon-map-pin geometry-button"
+        id="point-geometry-button"
+        value="point"
+        title="点"
+      ></button>
+      <button
+        class="esri-widget--button esri-icon-polyline geometry-button"
+        id="line-geometry-button"
+        value="polyline"
+        title="线"
+      ></button>
+      <button
+        class="esri-widget--button esri-icon-polygon geometry-button"
+        id="polygon-geometry-button"
+        value="polygon"
+        title="面"
+      ></button>
+    </div>
+    
+</body>
+</html>

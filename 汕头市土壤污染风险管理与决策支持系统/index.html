@@ -1,0 +1,104 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主页</title>
+    
+    <link rel="stylesheet" type="text/css" href="./resource/layui/css/layui.css">
+    <script src="./resource/layui/layui.js" type="text/javascript" charset="UTF-8"></script>
+</head>
+<body>
+  <!-- 网站标题 -->
+  <div class="layui-row">
+    <div class="layui-col-md4" style="text-align:center; height:10%; font-size: 20px; background-color: #5b6991; color: white; padding-top: 20px;">
+      汕头市土壤污染风险管理与决策支持系统
+    </div>
+  <!-- 导航栏 -->
+    <div class="layui-col-md8" style="height:10% ;">
+    <ul class="layui-nav" lay-filter="" style="height:100% ;">
+        <li class="layui-nav-item">  
+          <a href="./visualiza.html">
+            <i class="layui-icon layui-icon-picture"> </i>
+            数据可视化</a>
+        </li>
+        <li class="layui-nav-item ">
+          <a href="">
+            <i class="layui-icon layui-icon-chart-screen"> </i>
+            空间分析</a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+              <dd><a href="克里金\index.html">克里金插值</a></dd>
+              <dd><a href="企业poi空间查询.html">空间查询</a></dd>
+              <dd><a href="heatmap.html">密度分析</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+          <a href="toolbox.html">
+            <i class="layui-icon layui-icon-util"> </i>
+            计算工具</a>
+        </li>
+        <li class="layui-nav-item">
+          <a href=""><i class="layui-icon layui-icon-list"> </i>数据共享</a>
+          <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="paper.html">文献资料</a></dd>
+            <dd><a href="geodata.html">地理信息数据</a></dd>
+          </dl>
+        </li>
+        
+      </ul>
+    </div>
+  </div>
+      <!--轮播图-->
+      <div class="layui-carousel" id="test1">
+        <div carousel-item>
+          <div><img src="./static/images/海边.webp" alt="" height="100%", width="100%"></div>
+          <div><img src="./static/images/老街.webp" alt="" height="100%", width="100%"></div>
+          <div><img src="./static/images/南澳.webp" alt="" height="100%", width="100%"></div>
+          <div><img src="./static/images/小公园.webp" alt="" height="100%", width="100%"></div>
+        </div>
+      </div>
+
+      <!--面板-->
+      <div class="layui-row layui-col-space15" style="padding: 20px;">
+        <div class="layui-col-md4">
+          <div class="layui-panel">
+            <div style="padding: 30px; height: 500px;">
+              <h2>系统简介</h2><br>
+              <span>汕头市土壤污染风险管理与决策支持系统是由汕头大学工学院环境工程专业研究生创建，用于汕头市区域范围内的
+                各类地理空间数据、土壤污染空间数据和其他资源环境数据的可视化、共享、空间分析和计算的平台，旨在为科研人员、
+              参与土地政策制定、环境影响评价等各类人员提供更方便的数据获取、可视化、空间分析和计算服务和决策支持服务...</span>
+            </div>
+          </div>   
+        </div>
+        <div class="layui-col-md8">
+          <div class="layui-panel">
+            <div style="padding: 30px; height: 500px;">
+              <h2>土壤环境政策</h2><br>
+              <div style="font-size:20; margin-inline:20px"><a href="https://www.mee.gov.cn/ywgz/fgbz/fl/201809/t20180907_549845.shtml">中华人民共和国土壤污染防治法</a></div>
+              <div style="margin-inline:20px; font-size:20"><a href="static\document\土壤环境影响评价技术导则.pdf">环境影响评价技术导则 土壤环境（试行）</a></div>
+            </div>
+            </div>
+          </div>   
+        </div>
+      </div>    
+
+    <script>
+      //使用element模块
+        layui.use('element', function(){
+            var element = layui.element;});
+        //使用轮播图
+        layui.use('carousel', function(){
+            var carousel = layui.carousel;
+        //建造实例
+            carousel.render({
+            elem: '#test1'
+            ,width: '100%' //设置容器宽度
+            ,height: '50%'
+            ,arrow: 'always' //始终显示箭头
+            //,anim: 'updown' //切换动画方式
+            });
+        });
+    </script>
+    
+</body>
+</html>

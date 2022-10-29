@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>计算工具</title>
+  <link rel="stylesheet" href="./resource/layui/css/layui.css">
+  <script src="./resource/layui/layui.js"></script>
+</head>
+<body>
+  <!-- 网站标题 -->
+  <div class="layui-row">
+    <div class="layui-col-md4" style="text-align:center; height:10%; font-size: 20px; background-color: #5b6991; color: white; padding-top: 20px;">
+      汕头市土壤污染风险管理与决策支持系统
+    </div>
+  <!-- 导航栏 -->
+    <div class="layui-col-md8" style="height:10% ;">
+    <ul class="layui-nav" lay-filter="" style="height:100% ;">
+        <li class="layui-nav-item">  
+          <a href="./visualiza.html">
+            <i class="layui-icon layui-icon-picture"> </i>
+            数据可视化</a>
+        </li>
+        <li class="layui-nav-item ">
+          <a href="">
+            <i class="layui-icon layui-icon-chart-screen"> </i>
+            空间分析</a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+              <dd><a href="克里金\index.html">克里金插值</a></dd>
+              <dd><a href="企业poi空间查询.html">空间查询</a></dd>
+              <dd><a href="heatmap.html">密度分析</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+          <a href="toolbox.html">
+            <i class="layui-icon layui-icon-util"> </i>
+            计算工具</a>
+        </li>
+        <li class="layui-nav-item">
+          <a href=""><i class="layui-icon layui-icon-list"> </i>数据共享</a>
+          <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="paper.html">文献资料</a></dd>
+            <dd><a href="geodata.html">地理信息数据</a></dd>
+          </dl>
+        </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  <!-- 选项卡 -->
+  <div class="layui-tab layui-tab-card">
+    <ul class="layui-tab-title">
+      <li class="layui-this">内梅罗指数</li>
+      <li>生态风险指数</li>
+      <li>多元统计分析</li>
+      <li>机器学习模型</li>
+      
+    </ul>
+    <div class="layui-tab-content">
+      <div class="layui-tab-item layui-show">
+        <form action="">
+            <label for="ph">pH:</label><br>
+            <input type="text" id="ph" name="ph"><br>
+
+            <label for="cd">镉:</label><br>
+            <input type="text" id="cd" name="cd">
+            <input type="radio" id="st" name="st" value="st">
+            <label for="st">水田</label>
+            <input type="radio" id="qt" name="qt" value="qt">
+            <label for="qt">其他</label><br>
+            
+            <label for="hg">汞:</label><br>
+            <input type="text" id="hg" name="hg">
+            <input type="radio" id="st" name="st" value="st">
+            <label for="st">水田</label>
+            <input type="radio" id="qt" name="qt" value="qt">
+            <label for="qt">其他</label><br>
+
+            <label for="as">砷:</label><br>
+            <input type="text" id="as" name="as">
+            <input type="radio" id="st" name="st" value="st">
+            <label for="st">水田</label>
+            <input type="radio" id="qt" name="qt" value="qt">
+            <label for="qt">其他</label><br>
+
+            <label for="pb">铅:</label><br>
+            <input type="text" id="pb" name="pb">
+            <input type="radio" id="st" name="st" value="st">
+            <label for="st">水田</label>
+            <input type="radio" id="qt" name="qt" value="qt">
+            <label for="qt">其他</label><br>
+
+            <label for="cr">铬:</label><br>
+            <input type="text" id="cr" name="cr">
+            <input type="radio" id="st" name="st" value="st">
+            <label for="st">水田</label>
+            <input type="radio" id="qt" name="qt" value="qt">
+            <label for="qt">其他</label><br>
+
+            <label for="cu">铜:</label><br>
+            <input type="text" id="cu" name="cu">
+            <input type="radio" id="gy" name="gy" value="gy">
+            <label for="gy">果园</label>
+            <input type="radio" id="qt" name="qt" value="qt">
+            <label for="qt">其他</label><br>
+            
+        </form>
+        <br>
+        <button type="button">批量导入</button>
+        <br>
+        <div><h2>计算结果：<br></h2></div>
+      </div>
+    
+      <div class="layui-tab-item">
+        <form class="layui-form" action="">
+        <input type="checkbox" name="" title="写作" checked>
+        <input type="checkbox" name="" title="发呆"> 
+        <input type="checkbox" name="" title="禁用" disabled> 
+        </form>
+      </div>
+      <div class="layui-tab-item">
+        <form class="layui-form" action="">
+        <input type="checkbox" name="xxx" lay-skin="switch">
+        <input type="checkbox" name="yyy" lay-skin="switch" lay-text="ON|OFF" checked>
+        <input type="checkbox" name="zzz" lay-skin="switch" lay-text="开启|关闭">
+        <input type="checkbox" name="aaa" lay-skin="switch" disabled>
+        </form>
+      </div>
+      <div class="layui-tab-item">内容4</div>
+      <div class="layui-tab-item">内容5</div>
+    </div>
+  </div>
+<script>
+layui.use('element', function(){
+  var element = layui.element;
+  
+  //…
+});
+</script> 
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>数据共享</title>
+  <link rel="stylesheet" href="./resource/layui/css/layui.css">
+  <script src="./resource/layui/layui.js"></script>
+</head>
+<body>
+<!-- 导航栏 -->
+  <!-- 网站标题 -->
+  <div class="layui-row">
+    <div class="layui-col-md4" style="text-align:center; height:10%; font-size: 20px; background-color: #5b6991; color: white; padding-top: 20px;">
+      汕头市土壤污染风险管理与决策支持系统
+    </div>
+  <!-- 导航栏 -->
+    <div class="layui-col-md8" style="height:10% ;">
+    <ul class="layui-nav" lay-filter="" style="height:100% ;">
+        <li class="layui-nav-item">  
+          <a href="./visualiza.html">
+            <i class="layui-icon layui-icon-picture"> </i>
+            数据可视化</a>
+        </li>
+        <li class="layui-nav-item ">
+          <a href="">
+            <i class="layui-icon layui-icon-chart-screen"> </i>
+            空间分析</a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+              <dd><a href="克里金\index.html">克里金插值</a></dd>
+              <dd><a href="企业poi空间查询.html">空间查询</a></dd>
+              <dd><a href="heatmap.html">密度分析</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+          <a href="toolbox.html">
+            <i class="layui-icon layui-icon-util"> </i>
+            计算工具</a>
+        </li>
+        <li class="layui-nav-item">
+          <a href=""><i class="layui-icon layui-icon-list"> </i>数据共享</a>
+          <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="paper.html">文献资料</a></dd>
+            <dd><a href="geodata.html">地理信息数据</a></dd>
+          </dl>
+        </li>
+        
+      </ul>
+    </div>
+  </div>
+
+<!-- 文献折叠面板 -->
+<div class="layui-collapse">
+    <div class="layui-colla-item">
+      <h2 class="layui-colla-title">汕头市湖库型饮用水水源地周边土壤重金属污染评价及源解析</h2>
+      <div class="layui-colla-content layui-show">
+        <i><b>摘要：</b></i>通过对汕头市湖库型饮用水水源地秋风水库和河溪水库的准保护区、集水区土壤进行重金属Cd、Hg、As、Pb、Cr、Cu、Zn、Ni含量测定与分析，并用单项污染指数和内梅罗综合污染指数开展评价，结合相关性、主成分与聚类分析等进行源解析。结果表明：河溪水库周边土壤以重金属Cd污染为主，而秋风水库周边土壤以重金属Hg污染为主。河溪水库周边土壤的综合污染指数平均为5.770，秋风水库周边土壤的综合污染指数平均为3.837，均为重污染。另外Cd、Pb是第一主成分，归为一类，主要来自施用含镉肥料和汽车尾气；Cr、Zn、As、Ni呈显著正相关，归为一类，主要来自土壤成岩作用；Hg和Cu为第二主成分，各单独归为一类，主要来自于煤的燃烧和牲畜粪便。 
+      </div><br>
+      <a href="static\paper\汕头市湖库型饮用水水源地周...土壤重金属污染评价及源解析_曾金樱.pdf" style="color: blue;">全文下载</a>
+    </div>
+    <div class="layui-colla-item">
+      <h2 class="layui-colla-title">广东汕头市农业土壤和蔬菜铅含量及健康风险评估</h2>
+      <div class="layui-colla-content ">
+        <i><b>摘要：</b></i> 重金属元素铅的危害已经引起人们的广泛关注,为了得到汕头市土壤及蔬菜铅污染的状况,选取了该市115个土壤样品及34个蔬菜样品进行铅含量分析。研究发现,汕头市土壤样品铅含量差异较大,最高含量为110 mg/kg,最低含量则为12.1 mg/kg,极差达到97.9 mg/kg。56.52%的土壤样品铅含量超过国家土壤环境质量标准,表明该市土壤铅污染存在普遍性,且各区（县）土壤铅含量极不均匀。汕头市蔬菜样品铅含量全部超过国家食品卫生标准（GB14935—94）,不同蔬菜品种对铅的富集能力均较强,蔬菜样品铅最低含量为5 mg/kg,最高含量为85 mg/kg,分别为国家标准限值的5倍和425倍。经分析认为,该市铅污染源主要来自工业"三废"排放、大量含铅农药的使用、汽车尾气排放以及大气沉降等。还对汕头市民通过食用蔬菜而导致的铅暴露进行了健康风险评估,结果表明该市居民使用蔬菜存在较大的健康风险。
+      </div><br>
+      <a href="static\paper\广东汕头市农业土壤和蔬菜铅含量及健康风险评估_马瑾.pdf" style="color: blue;">全文下载</a>
+    </div>
+    <div class="layui-colla-item">
+      <h2 class="layui-colla-title">A methodological framework for identifying potential sources of soil heavy metal pollution based on machine learning: A case study in the Yangtze Delta, China</h2>
+      <div class="layui-colla-content ">
+        <i><b>摘要：</b></i>It is a great challenge to identify the many and varied sources of soil heavy metal pollution. Often little information is available regarding the anthropogenic factors and enterprises that could potentially pollute soils. In this study we use freely available geographical data from a search engine in conjunction with machine learning methodologies to identify and classify potentially polluting enterprises in the Yangtze Delta, China. The data were classiﬁed into 31 separate and four integrated industry types by ﬁve different machine learning approaches. Multinomial naive Bayesian (NB) methods achieved an accuracy of 87% and Kappa coefﬁcient of 0.82 and were used to classify the geographic data from more than 260,000 enterprises. The relationship between the different industry classes and measurements of soil cadmium (Cd) and mercury (Hg) concentrations was explored using bivariate local Moran's I analysis. The analysis revealed areas where different industry classes had led to soil pollution. In the case of Cd, elevated concentrations also occurred in some areas because of excessive fertilization and coal mining. This study provides a new approach to investigate the interaction between anthropogenic pollution and natural sources of soil heavy metals to inform pollution control and planning decisions regarding the location of industrial sites.
+      </div>
+      <a href="static\paper\Jia 等。 - 2019 - A methodological framework for identifying potenti.pdf" style="color: blue;">全文下载</a>
+    </div>
+    <div class="layui-colla-item">
+        <h2 class="layui-colla-title">A review of soil heavy metal pollution from industrial and agricultural regions in China: Pollution and risk assessment</h2>
+        <div class="layui-colla-content ">
+          <i><b>摘要：</b></i>Soil heavy metal pollution has been becoming serious and widespread in China. To date, there are few studies assessing the nationwide soil heavy metal pollution induced by industrial and agricultural activities in China. This review obtained heavy metal concentrations in soils of 402 industrial sites and 1041 agricultural sites in China throughout the document retrieval. Based on the database, this review assessed soil heavy metal concentration and estimated the ecological and health risks on a national scale. The results revealed that heavy metal pollution and associated risks posed by cadmium (Cd), lead (Pb) and arsenic (As) are more serious. Besides, heavy metal pollution and associated risks in industrial regions are severer than those in agricultural regions, meanwhile, those in southeast China are severer than those in northwest China. It is worth noting that children are more likely to be affected by heavy metal pollution than adults. Based on the assessment results, Cd, Pb and As are determined as the priority control heavy metals; mining areas are the priority control areas compared to other areas in industrial regions; food crop plantations are the priority control areas in agricultural regions; and children are determined as the priority protection population group. This paper provides a comprehensive ecological and health risk assessment on the heavy metals in soils in Chinese industrial and agricultural regions and thus provides insights for the policymakers regarding exposure reduction and management.
+        </div>
+        <a href="static\paper\Jia 等。 - 2019 - A methodological framework for identifying potenti.pdf" style="color: blue;">全文下载</a>
+    </div>
+  </div>
+
+  
+<script>
+layui.use('element', function(){
+  var element = layui.element;
+  
+  //…
+});
+</script> 
+</body>
+</html>

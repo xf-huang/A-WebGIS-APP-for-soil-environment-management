@@ -1,0 +1,103 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据可视化</title>
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <link rel="stylesheet" type="text/css" href="./resource/layui/css/layui.css">
+    <script src="./resource/layui/layui.js" type="text/javascript" charset="UTF-8"></script>
+    <link rel="stylesheet" href="./resource/ol/ol.css">
+</head>
+<body>
+      <!-- 网站标题 -->
+  <div class="layui-row">
+    <div class="layui-col-md4" style="text-align:center; height:10%; font-size: 20px; background-color: #5b6991; color: white; padding-top: 20px;">
+      汕头市土壤污染风险管理与决策支持系统
+    </div>
+  <!-- 导航栏 -->
+    <div class="layui-col-md8" style="height:10% ;">
+    <ul class="layui-nav" lay-filter="" style="height:100% ;">
+        <li class="layui-nav-item">  
+          <a href="./visualiza.html">
+            <i class="layui-icon layui-icon-picture"> </i>
+            数据可视化</a>
+        </li>
+        <li class="layui-nav-item ">
+          <a href="">
+            <i class="layui-icon layui-icon-chart-screen"> </i>
+            空间分析</a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+              <dd><a href="克里金\index.html">克里金插值</a></dd>
+              <dd><a href="企业poi空间查询.html">空间查询</a></dd>
+              <dd><a href="heatmap.html">密度分析</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+          <a href="toolbox.html">
+            <i class="layui-icon layui-icon-util"> </i>
+            计算工具</a>
+        </li>
+        <li class="layui-nav-item">
+          <a href=""><i class="layui-icon layui-icon-list"> </i>数据共享</a>
+          <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="paper.html">文献资料</a></dd>
+            <dd><a href="geodata.html">地理信息数据</a></dd>
+          </dl>
+        </li>
+        
+      </ul>
+    </div>
+  </div>
+    <div class="container">
+        <div class="grid-container">
+            <div class="grid-1">
+                <div class="sidebar">
+                    <h2>切换底图</h2>
+                    <input type="radio" name="baselayerRB" value="OSMStandard" checked>OSM Standard <br>
+                    <input type="radio" name="baselayerRB" value="OSMHumanitarian">OSM Humanitarian <br>
+                    <input type="radio" name="baselayerRB" value="StamenTerrain">StamenTerrain <br>
+                    <label>
+                        透明度
+                        <input id="opacity-input" type="range" min="0" max="1" step="0.01" value="1" />
+                        <span id="opacity-output"></span>
+                    </label><br>
+                    <h2>栅格数据</h2>
+                    <form action="">
+                      DEM <input type="checkbox" name="DEM" value="DEM"> <br>
+                      土地利用 <input type="checkbox" name="landuse" value="landuse" onclick="land(this)"> <br>
+                      植被指数 <input type="checkbox" name="ndvi" value="ndvi" > <br>
+                      人口密度 <input type="checkbox" name="pop" value="pop" > <br>
+                      土壤类型 <input type="checkbox" name="soiltype" value="soiltype" > <br>
+                    </form><br>
+
+                    <h2>矢量数据</h2>
+                    <form action="">
+                      行政区划 <input type="checkbox" name="district" value="district" id="district" onclick="dist(this)"> <br>
+                      路网 <input type="checkbox" name="roads" value="roads" id="roads" onclick="road(this)"> <br>
+                      水体 <input type="checkbox" name="ndvi" value="ndvi" id="ndvi" onclick="water(this)"> <br>
+                      企业分布 <input type="checkbox" name="company" value="company" id="company"> <br>
+                    </form><br>
+
+                    <h2>时间序列</h2>
+                    <div style="font-size:15; margin:10px; color: blue;"><a href="时间序列\LandUse\index.html">土地覆盖类型</a></div>
+                    <div style="font-size:15; margin:10px; color: blue"><a href="时间序列\NDVI\index.html">植被指数（NDVI）</a></div>
+                    <div style="font-size:15; margin:10px; color: blue"><a href="时间序列\Population\index.html">人口密度</a></div>
+
+                </div>
+            </div>
+            <div class="grid-2">
+                <div id="js-map" class="map"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        //使用element模块
+        layui.use('element', function(){
+            var element = layui.element;});
+    </script>
+    
+    <script src="./resource/ol/ol.js"></script>
+    <script src="./main.js"></script>
+</body>
+</html>

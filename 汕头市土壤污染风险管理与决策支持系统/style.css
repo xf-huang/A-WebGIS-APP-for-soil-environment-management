@@ -1,0 +1,24 @@
+* {
+    box-sizing: border-box;
+}
+
+body{
+    margin: 0;
+    padding: 0
+}
+
+.grid-container{
+    display: grid;
+    grid-template-columns: 20vw 80vw;
+    grid-template-rows: 100vh;
+}
+
+.sidebar{
+    margin-left: 15px;
+}
+
+/*缩放控件的样式*/
+.ol-zoomslider.ol-unselectable.ol-control{
+    background-color: rgb(118, 95, 160);
+    margin-top: 100px;
+}

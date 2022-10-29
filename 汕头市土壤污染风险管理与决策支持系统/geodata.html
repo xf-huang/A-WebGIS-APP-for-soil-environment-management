@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>数据共享</title>
+  <link rel="stylesheet" href="./resource/layui/css/layui.css">
+  <script src="./resource/layui/layui.js"></script>
+</head>
+<body>
+  <!-- 网站标题 -->
+  <div class="layui-row">
+    <div class="layui-col-md4" style="text-align:center; height:10%; font-size: 20px; background-color: #5b6991; color: white; padding-top: 20px;">
+      汕头市土壤污染风险管理与决策支持系统
+    </div>
+  <!-- 导航栏 -->
+    <div class="layui-col-md8" style="height:10% ;">
+    <ul class="layui-nav" lay-filter="" style="height:100% ;">
+        <li class="layui-nav-item">  
+          <a href="./visualiza.html">
+            <i class="layui-icon layui-icon-picture"> </i>
+            数据可视化</a>
+        </li>
+        <li class="layui-nav-item ">
+          <a href="">
+            <i class="layui-icon layui-icon-chart-screen"> </i>
+            空间分析</a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+              <dd><a href="克里金\index.html">克里金插值</a></dd>
+              <dd><a href="企业poi空间查询.html">空间查询</a></dd>
+              <dd><a href="heatmap.html">密度分析</a></dd>
+            </dl>
+        </li>
+        <li class="layui-nav-item">
+          <a href="toolbox.html">
+            <i class="layui-icon layui-icon-util"> </i>
+            计算工具</a>
+        </li>
+        <li class="layui-nav-item">
+          <a href=""><i class="layui-icon layui-icon-list"> </i>数据共享</a>
+          <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="paper.html">文献资料</a></dd>
+            <dd><a href="geodata.html">地理信息数据</a></dd>
+          </dl>
+        </li>
+        
+      </ul>
+    </div>
+  </div>
+<!-- 数据面板 -->
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md3">
+      <div class="layui-panel">
+        <div style="padding: 10px; height: 200px; ">
+            <a href="static\data\water_body.shp">
+            <img src="static\images\土地覆盖.png" alt="" style="height:100% ;">
+            </a>
+        </div>
+        <div style="text-align: center;">土地覆盖类型</div>
+      </div>  
+    </div> 
+    
+    <div class="layui-col-md3">
+      <div class="layui-panel">
+        <div style="padding: 10px; height: 200px; ">
+          <a href="static\data\water_body.shp">
+            <img src="static\images\行政区划.png" alt="" style="height:100% ;">
+          </a>
+        </div>
+        <div style="text-align: center;">行政区划</div>
+      </div>   
+    </div>
+    <div class="layui-col-md3">
+        <div class="layui-panel">
+          <div style="padding: 10px; height: 200px; ">
+            <a href="static\data\water_body.shp">
+              <img src="static\images\植被指数.png" alt="" style="height:100% ;">
+            </a>
+          </div>
+          <div style="text-align: center;">植被指数(NDVI)</div>
+        </div>   
+      </div>
+      <div class="layui-col-md3">
+        <div class="layui-panel">
+          <div style="padding: 10px; height: 200px; ">
+            <a href="static\data\roads.rar">
+              <img src="static\images\路网.png" alt="" style="height:100% ;">
+            </a>
+          </div>
+          <div style="text-align: center;">路网</div>
+        </div>
+          
+      </div>
+  </div>   
+
+  
+<script>
+layui.use('element', function(){
+  var element = layui.element;
+  
+  //…
+});
+</script> 
+</body>
+</html>

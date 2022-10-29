@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>
+      SceneLayerView - query statistics by geometry | Sample | ArcGIS API for
+      JavaScript 4.24
+    </title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      .esri-ui-top-right {
+        max-height: 100%;
+      }
+
+      #queryDiv,
+      #resultDiv {
+        min-width: 250px;
+        font-size: 14px;
+        padding: 10px;
+        display: none;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .geometry-options {
+        display: flex;
+        flex-direction: row;
+      }
+      .geometry-button {
+        flex: 1;
+        border-style: solid;
+        border-width: 1px;
+        border-image: none;
+      }
+      .geometry-button-selected {
+        background: #4c4c4c;
+        color: #fff;
+      }
+
+      #bufferNum {
+        width: 90%;
+        margin: 2.5em auto 0;
+      }
+
+      .count {
+        white-space: nowrap;
+        font-size: 14px;
+        font-weight: bold;
+        display: inline-block;
+      }
+    </style>
+    <!-- Load the Chart.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.24/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/layers/FeatureLayer",
+        "esri/views/MapView",
+        "esri/layers/GraphicsLayer",
+        "esri/widgets/Sketch/SketchViewModel",
+        "esri/widgets/Slider",
+        "esri/geometry/geometryEngine",
+        "esri/Graphic",
+        "esri/core/promiseUtils"
+      ], (
+        Map,
+        FeatureLayer,
+        MapView,
+        GraphicsLayer,
+        SketchViewModel,
+        Slider,
+        geometryEngine,
+        Graphic,
+        promiseUtils
+      ) => {
+        // Load webscene and display it in a SceneView
+        const feature = new FeatureLayer({
+          portalItem: {
+            id: "a28bf61236a44f758fe533b26b604cc2",
+            outFields: ["*"]
+          }
+        });
+
+        // Create map
+        const map = new Map({
+          basemap: "osm",
+          layers: [feature]
+        });
+
+        // create the SceneView
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          zoom: 10,
+          center: [116.64543,23.30000],
+          
+        });
+        window.view = view;
+        // add a GraphicsLayer for the sketches and the buffer
+        const sketchLayer = new GraphicsLayer();
+        const bufferLayer = new GraphicsLayer();
+        view.map.addMany([bufferLayer, sketchLayer]);
+
+        // let sceneLayer = null;
+        let FeatureLayerView = null;
+        let bufferSize = 0;
+
+        // Assign scene layer once webscene is loaded and initialize UI
+        feature.load().then(() => {
+          
+          view.whenLayerView(feature).then((layerView) => {
+            FeatureLayerView = layerView;
+            queryDiv.style.display = "block";
+          });
+        });
+
+        view.ui.add([queryDiv], "bottom-left");
+        view.ui.add([resultDiv], "top-right");
+
+        // use SketchViewModel to draw polygons that are used as a query
+        let sketchGeometry = null;
+        const sketchViewModel = new SketchViewModel({
+          layer: sketchLayer,
+          defaultUpdateOptions: {
+            tool: "reshape",
+            toggleToolOnClick: false
+          },
+          view: view,
+          defaultCreateOptions: { hasZ: false }
+        });
+
+        sketchViewModel.on("create", (event) => {
+          if (event.state === "complete") {
+            sketchGeometry = event.graphic.geometry;
+            runQuery();
+          }
+        });
+
+        sketchViewModel.on("update", (event) => {
+          if (event.state === "complete") {
+            sketchGeometry = event.graphics[0].geometry;
+            runQuery();
+          }
+        });
+
+        const typeChart = createTypeChart();
+
+        // draw geometry buttons - use the selected geometry to sktech
+        const pointBtn = document.getElementById("point-geometry-button");
+        const lineBtn = document.getElementById("line-geometry-button");
+        const polygonBtn = document.getElementById("polygon-geometry-button");
+        pointBtn.addEventListener("click", geometryButtonsClickHandler);
+        lineBtn.addEventListener("click", geometryButtonsClickHandler);
+        polygonBtn.addEventListener("click", geometryButtonsClickHandler);
+
+        function geometryButtonsClickHandler(event) {
+          const geometryType = event.target.value;
+          clearGeometry();
+          sketchViewModel.create(geometryType);
+        }
+
+        const bufferNumSlider = new Slider({
+          container: "bufferNum",
+          min: 0,
+          max: 5000,
+          steps: 10,
+          visibleElements: {
+            labels: true
+          },
+          precision: 0,
+          labelFormatFunction: (value, type) => {
+            return `${value.toString()}m`;
+          },
+          values: [0]
+        });
+        // get user entered values for buffer
+        bufferNumSlider.on(
+          ["thumb-change", "thumb-drag"],
+          bufferVariablesChanged
+        );
+        function bufferVariablesChanged(event) {
+          bufferSize = event.value;
+          runQuery();
+        }
+        // Clear the geometry and set the default renderer
+        const clearGeometryBtn = document.getElementById("clearGeometry");
+        clearGeometryBtn.addEventListener("click", clearGeometry);
+
+        // Clear the geometry and set the default renderer
+        function clearGeometry() {
+          sketchGeometry = null;
+          sketchViewModel.cancel();
+          sketchLayer.removeAll();
+          bufferLayer.removeAll();
+          clearHighlighting();
+          clearCharts();
+          resultDiv.style.display = "none";
+        }
+
+        // set the geometry query on the visible SceneLayerView
+        const debouncedRunQuery = promiseUtils.debounce(() => {
+          if (!sketchGeometry) {
+            return;
+          }
+
+          resultDiv.style.display = "block";
+          updateBufferGraphic(bufferSize);
+          return promiseUtils.eachAlways([
+            queryStatistics(),
+            updateSceneLayer()
+          ]);
+        });
+
+        function runQuery() {
+          debouncedRunQuery().catch((error) => {
+            if (error.name === "AbortError") {
+              return;
+            }
+
+            console.error(error);
+          });
+        }
+
+        // Set the renderer with objectIds
+        let highlightHandle = null;
+        function clearHighlighting() {
+          if (highlightHandle) {
+            highlightHandle.remove();
+            highlightHandle = null;
+          }
+        }
+
+        function highlightBuildings(objectIds) {
+          // Remove any previous highlighting
+          clearHighlighting();
+          const objectIdField = feature.objectIdField;
+          document.getElementById("count").innerHTML = objectIds.length;
+
+          highlightHandle = FeatureLayerView.highlight(objectIds);
+        }
+
+        // update the graphic with buffer
+        function updateBufferGraphic(buffer) {
+          // add a polygon graphic for the buffer
+          if (buffer > 0) {
+            const bufferGeometry = geometryEngine.geodesicBuffer(
+              sketchGeometry,
+              buffer,
+              "meters"
+            );
+            if (bufferLayer.graphics.length === 0) {
+              bufferLayer.add(
+                new Graphic({
+                  geometry: bufferGeometry,
+                  symbol: sketchViewModel.polygonSymbol
+                })
+              );
+            } else {
+              bufferLayer.graphics.getItemAt(0).geometry = bufferGeometry;
+            }
+          } else {
+            bufferLayer.removeAll();
+          }
+        }
+
+        function updateSceneLayer() {
+          const query = feature.createQuery();
+          query.geometry = sketchGeometry;
+          query.distance = bufferSize;
+          return feature.queryObjectIds(query).then(highlightBuildings);
+        }
+
+        // let typeChart = null;
+        //let materialChart = null;
+
+        function queryStatistics() {
+          const statDefinitions = [
+            {
+              onStatisticField:
+                "CASE type WHEN '工厂' THEN 1 ELSE 0 END",
+              outStatisticFieldName: "gongchang",
+              statisticType: "sum"
+            },
+            {
+              onStatisticField:
+                "CASE WHEN type = '医药' THEN 1 ELSE 0 END",
+              outStatisticFieldName: "yiyao",
+              statisticType: "sum"
+            },
+            {
+              onStatisticField:
+                "CASE WHEN type = '冶金化工' THEN 1 ELSE 0 END",
+              outStatisticFieldName: "yejin",
+              statisticType: "sum"
+            },
+            {
+              onStatisticField:
+                "CASE WHEN type = '机械电子' THEN 1 ELSE 0 END",
+              outStatisticFieldName: "jixie",
+              statisticType: "sum"
+            },
+            {
+              onStatisticField:
+                "CASE WHEN type = '建筑' THEN 1 ELSE 0 END",
+              outStatisticFieldName: "jianzhu",
+              statisticType: "sum"
+            },
+            {
+              onStatisticField:
+                "CASE WHEN type = '农林牧渔' THEN 1 ELSE 0 END",
+              outStatisticFieldName: "nonglin",
+              statisticType: "sum"
+            },
+            
+          ];
+          const query = feature.createQuery();
+          query.geometry = sketchGeometry;
+          query.distance = bufferSize;
+          query.outStatistics = statDefinitions;
+
+          return feature.queryFeatures(query).then((result) => {
+            const allStats = result.features[0].attributes;
+            console.log(result.features);
+            updateChart(typeChart, [
+              allStats.gongchang,
+              allStats.yiyao,
+              allStats.yejin,
+              allStats.jianzhu,
+              allStats.jixie,
+              allStats.nonglin
+            ]);
+            
+          }, console.error);
+        }
+
+        // Updates the given chart with new data
+        function updateChart(chart, dataValues) {
+          chart.data.datasets[0].data = dataValues;
+          chart.update();
+        }
+
+        function createTypeChart() {
+          const typeCanvas = document.getElementById("year-chart");
+          const typeChart = new Chart(typeCanvas.getContext("2d"), {
+            type: "horizontalBar",
+            data: {
+              labels: [
+                "工厂",
+                "医药",
+                "冶金化工",
+                "建筑",
+                "机械电子",
+                "农林牧渔"
+              ],
+              datasets: [
+                {
+                  label: "",
+                  backgroundColor: "#149dcf",
+                  stack: "Stack 0",
+                  data: [0, 0, 0, 0, 0, 0]
+                }
+              ]
+            },
+            options: {
+              responsive: false,
+              legend: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: "企业类型"
+              },
+              scales: {
+                xAxes: [
+                  {
+                    stacked: true,
+                    ticks: {
+                      beginAtZero: true,
+                      precision: 0
+                    }
+                  }
+                ],
+                yAxes: [
+                  {
+                    stacked: true
+                  }
+                ]
+              }
+            }
+          });
+
+          return typeChart
+        }
+
+        
+        
+
+        function clearCharts() {
+          
+          updateChart(typeChart, [0, 0, 0, 0, 0, 0]);
+          document.getElementById("count").innerHTML = 0;
+        }
+
+        
+        
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="queryDiv" class="esri-widget">
+      <b>自定义区域统计</b><br />
+      <br />绘制几何区域:
+      <div class="geometry-options">
+        <button
+          class="esri-widget--button esri-icon-map-pin geometry-button"
+          id="point-geometry-button"
+          value="point"
+          title="Query by point"
+        ></button>
+        <button
+          class="esri-widget--button esri-icon-polyline geometry-button"
+          id="line-geometry-button"
+          value="polyline"
+          title="Query by line"
+        ></button>
+        <button
+          class="esri-widget--button esri-icon-polygon geometry-button"
+          id="polygon-geometry-button"
+          value="polygon"
+          title="Query by polygon"
+        ></button>
+      </div>
+      <br />
+      <div class="tooltip">
+        <label for="bufferNum">设置缓冲区大小:</label>
+        <div id="bufferNum"></div>
+      </div>
+      <br />
+      <button class="esri-button" id="clearGeometry" type="button">
+        清除
+      </button>
+    </div>
+
+    <div id="resultDiv" class="esri-widget">
+      <div class="count">
+        所选企业数量:
+        <div class="count" id="count">0</div>
+      </div>
+      <div class="charts">
+        <div>
+          <canvas id="year-chart" height="250" width="260" />
+        </div>
+        
+      </div>
+    </div>
+  </body>
+</html>
